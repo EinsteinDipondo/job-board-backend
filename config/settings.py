@@ -222,3 +222,44 @@ MIDDLEWARE = [
     # ... rest of your middleware
 ]
 
+
+# Render.com production settings
+import os
+import dj_database_url
+
+# Update database configuration
+if 'RENDER' in os.environ:
+    # Render uses RENDER environment variable
+    DEBUG = False
+    
+    # Security settings
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    
+    # Render database
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+    
+    # Static files
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    
+    # Allow Render host
+    RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    if RENDER_EXTERNAL_HOSTNAME:
+        ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# CORS settings - update with your frontend URL later
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    # Add your frontend URL after deployment
+]
+
