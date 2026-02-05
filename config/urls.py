@@ -35,10 +35,30 @@ def obtain_token(request):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 urlpatterns = [
-    path('api/register/', register_user, name='register'),
     path('', home),
     path('admin/', admin.site.urls),
     path('api/token/', obtain_token),
     path('api/token/refresh/', lambda r: JsonResponse({'error': 'Not implemented'}, status=501)),
 ]
-from .register_view import register_user
+from django.http import JsonResponse
+import json
+from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def register_user(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            email = data.get('email', '')
+            
+            if User.objects.filter(username=username).exists():
+                return JsonResponse({'error': 'Username exists'}, status=400)
+            
+            user = User.objects.create_user(username, email, password)
+            return JsonResponse({'message': 'User created', 'username': username})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
