@@ -35,8 +35,10 @@ def obtain_token(request):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 urlpatterns = [
+    path('api/register/', register_user, name='register'),
     path('', home),
     path('admin/', admin.site.urls),
     path('api/token/', obtain_token),
     path('api/token/refresh/', lambda r: JsonResponse({'error': 'Not implemented'}, status=501)),
 ]
+from .register_view import register_user
