@@ -12,7 +12,6 @@ def home(request):
             'admin': '/admin/',
             'token': '/api/token/',
             'token_refresh': '/api/token/refresh/',
-            'api_docs': '/api/',
         }
     })
 
