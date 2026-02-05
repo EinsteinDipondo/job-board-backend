@@ -1,17 +1,24 @@
-# config/urls.py - REPLACE ENTIRE FILE WITH THIS
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+from django.http import JsonResponse
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from django.conf import settings
-from django.conf.urls.static import static
+
+def home(request):
+    return JsonResponse({
+        'message': 'Job Board API',
+        'status': 'running',
+        'version': '1.0',
+        'endpoints': {
+            'admin': '/admin/',
+            'token': '/api/token/',
+            'token_refresh': '/api/token/refresh/',
+            'api_docs': '/api/',
+        }
+    })
 
 urlpatterns = [
+    path('', home),
     path('admin/', admin.site.urls),
-    path('api/', include('backend.apps.jobs.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
-
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
