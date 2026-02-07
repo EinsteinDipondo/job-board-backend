@@ -1,86 +1,142 @@
 """
-Simple jobs API for frontend.
+Jobs API with CRUD operations and filtering.
 """
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
 
-@csrf_exempt
-def jobs_list(request):
-    """Return sample jobs data."""
-    jobs = [
-        {
-            "id": 1,
-            "title": "Senior React Developer",
-            "company": "Tech Innovations Inc.",
-            "location": "Remote",
-            "salary": "$120,000 - $160,000",
-            "type": "Full-time",
-            "description": "Join our team to build cutting-edge web applications.",
-            "posted": "2025-02-03",
-            "requirements": ["5+ years React", "TypeScript", "REST APIs"]
-        },
-        {
-            "id": 2,
-            "title": "Python/Django Backend Engineer",
-            "company": "Data Systems LLC",
-            "location": "San Francisco, CA",
-            "salary": "$130,000 - $170,000",
-            "type": "Full-time",
-            "description": "Build scalable backend systems for our platform.",
-            "posted": "2025-02-04",
-            "requirements": ["Python", "Django", "PostgreSQL", "AWS"]
-        },
-        {
-            "id": 3,
-            "title": "Full Stack Developer",
-            "company": "Startup Ventures",
-            "location": "New York, NY",
-            "salary": "$100,000 - $140,000",
-            "type": "Full-time",
-            "description": "Work on both frontend and backend of our product.",
-            "posted": "2025-02-05",
-            "requirements": ["React", "Node.js", "MongoDB", "Docker"]
-        },
-        {
-            "id": 4,
-            "title": "DevOps Engineer",
-            "company": "Cloud Solutions",
-            "location": "Austin, TX",
-            "salary": "$110,000 - $150,000",
-            "type": "Full-time",
-            "description": "Manage infrastructure and deployment pipelines.",
-            "posted": "2025-02-06",
-            "requirements": ["AWS", "Kubernetes", "Terraform", "CI/CD"]
-        },
-        {
-            "id": 5,
-            "title": "Frontend Developer",
-            "company": "Digital Creations",
-            "location": "Remote",
-            "salary": "$90,000 - $130,000",
-            "type": "Contract",
-            "description": "Create beautiful user interfaces for web applications.",
-            "posted": "2025-02-07",
-            "requirements": ["JavaScript", "CSS", "UI/UX Design", "Responsive Design"]
-        }
-    ]
-    return JsonResponse({"jobs": jobs, "count": len(jobs), "success": True})
-
-@csrf_exempt
-def job_detail(request, job_id):
-    """Return details for a specific job."""
-    # For now, just return a sample job
-    job = {
-        "id": job_id,
-        "title": f"Job #{job_id} Details",
-        "company": "Sample Company",
+# Sample jobs data - module-level variable
+JOBS = [
+    {
+        "id": 1,
+        "title": "Senior React Developer",
+        "company": "Tech Innovations Inc.",
+        "location": "San Francisco, CA",
+        "salary": "$150,000 - $200,000",
+        "type": "full_time",
+        "category_id": 1,
+        "description": "Lead frontend development with React and TypeScript.",
+        "requirements": ["5+ years React", "TypeScript", "Redux"],
+        "remote": True,
+        "featured": True
+    },
+    {
+        "id": 2,
+        "title": "Backend Engineer",
+        "company": "DataFlow Systems",
         "location": "Remote",
-        "salary": "$100,000 - $150,000",
-        "type": "Full-time",
-        "description": "This is a detailed job description.",
-        "posted": "2025-02-01",
-        "requirements": ["Skill 1", "Skill 2", "Skill 3"],
-        "responsibilities": ["Task 1", "Task 2", "Task 3"],
-        "benefits": ["Health Insurance", "Remote Work", "Stock Options"]
+        "salary": "$130,000 - $180,000",
+        "type": "full_time",
+        "category_id": 1,
+        "description": "Build scalable backend services with Django.",
+        "requirements": ["Python", "Django", "PostgreSQL"],
+        "remote": True,
+        "featured": False
     }
-    return JsonResponse({"job": job, "success": True})
+]
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def jobs_list(request):
+    """List all jobs or create a new job."""
+    if request.method == 'GET':
+        # Get filter parameters
+        location = request.GET.get('location', '')
+        job_type = request.GET.get('type', '')
+        remote = request.GET.get('remote', '')
+        search = request.GET.get('search', '')
+        category = request.GET.get('category', '')
+        
+        filtered_jobs = JOBS
+        
+        # Apply filters
+        if location:
+            filtered_jobs = [j for j in filtered_jobs if location.lower() in j['location'].lower()]
+        
+        if job_type:
+            filtered_jobs = [j for j in filtered_jobs if j['type'] == job_type]
+        
+        if remote.lower() == 'true':
+            filtered_jobs = [j for j in filtered_jobs if j['remote']]
+        
+        if search:
+            search = search.lower()
+            filtered_jobs = [
+                j for j in filtered_jobs 
+                if search in j['title'].lower() 
+                or search in j['description'].lower()
+                or search in j['company'].lower()
+            ]
+        
+        if category:
+            filtered_jobs = [j for j in filtered_jobs if j['category_id'] == int(category)]
+        
+        return JsonResponse({
+            "jobs": filtered_jobs,
+            "count": len(filtered_jobs),
+            "filters_applied": {
+                "location": location,
+                "type": job_type,
+                "remote": remote,
+                "search": search,
+                "category": category
+            }
+        })
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            new_job = {
+                "id": len(JOBS) + 1,
+                "title": data.get('title', ''),
+                "company": data.get('company', ''),
+                "location": data.get('location', ''),
+                "salary": data.get('salary', ''),
+                "type": data.get('type', 'full_time'),
+                "category_id": data.get('category_id', 1),
+                "description": data.get('description', ''),
+                "requirements": data.get('requirements', []),
+                "remote": data.get('remote', False),
+                "featured": data.get('featured', False)
+            }
+            JOBS.append(new_job)
+            return JsonResponse(new_job, status=201)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+@csrf_exempt
+@require_http_methods(["GET", "PUT", "DELETE"])
+def job_detail(request, job_id):
+    """Retrieve, update or delete a job."""
+    job = next((j for j in JOBS if j['id'] == job_id), None)
+    
+    if not job:
+        return JsonResponse({"error": "Job not found"}, status=404)
+    
+    if request.method == 'GET':
+        return JsonResponse({"job": job})
+    
+    elif request.method == 'PUT':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            job.update({
+                "title": data.get('title', job['title']),
+                "company": data.get('company', job['company']),
+                "location": data.get('location', job['location']),
+                "salary": data.get('salary', job['salary']),
+                "type": data.get('type', job['type']),
+                "category_id": data.get('category_id', job['category_id']),
+                "description": data.get('description', job['description']),
+                "requirements": data.get('requirements', job['requirements']),
+                "remote": data.get('remote', job['remote']),
+                "featured": data.get('featured', job['featured'])
+            })
+            return JsonResponse({"job": job})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    
+    elif request.method == 'DELETE':
+        # Update the module-level variable
+        JOBS[:] = [j for j in JOBS if j['id'] != job_id]
+        return JsonResponse({"message": "Job deleted successfully"}, status=204)

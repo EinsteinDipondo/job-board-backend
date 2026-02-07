@@ -1,15 +1,13 @@
 """
-URL configuration for jobs app.
-Uses lazy imports to avoid Django settings access during import.
+Simple URL patterns for jobs app - avoids import-time issues.
 """
-from django.urls import path, include
+from django.urls import path
 
-# Define urlpatterns directly without early imports
-urlpatterns = []
+# Don't import anything from rest_framework here
+# We'll define patterns in a function
 
-# Function to get urlpatterns lazily
-def get_jobs_urlpatterns():
-    """Lazy loading of URL patterns to avoid import-time settings access."""
+def get_job_urlpatterns():
+    """Get URL patterns - called when Django is ready."""
     from rest_framework.routers import DefaultRouter
     from .views import (
         JobViewSet, JobCategoryViewSet, JobApplicationViewSet,
@@ -22,6 +20,7 @@ def get_jobs_urlpatterns():
     router.register(r'categories', JobCategoryViewSet, basename='jobcategory')
     router.register(r'applications', JobApplicationViewSet, basename='jobapplication')
     
+    from django.urls import include
     return [
         path('', include(router.urls)),
         path('auth/register/', register_user, name='register'),
@@ -31,9 +30,5 @@ def get_jobs_urlpatterns():
         path('my-applications/', MyApplicationsView.as_view(), name='my_applications'),
     ]
 
-# This will be called when Django loads URLs
-def get_urlpatterns():
-    return get_jobs_urlpatterns()
-
-# Set urlpatterns using the lazy function
-urlpatterns = get_jobs_urlpatterns()
+# This is what Django will import
+urlpatterns = get_job_urlpatterns()
