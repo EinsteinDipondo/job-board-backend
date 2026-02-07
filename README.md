@@ -16,28 +16,6 @@
 
 ---
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Quick Links](#quick-links)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [API Documentation](#api-documentation)
-- [API Usage Examples](#api-usage-examples)
-- [Database Models](#database-models)
-- [Security Features](#security-features)
-- [Deployment](#deployment)
-- [Performance Optimization](#performance-optimization)
-- [Testing](#testing)
-- [Monitoring & Logging](#monitoring--logging)
-- [Contributing](#contributing)
-- [License](#license)
-- [Support](#support)
-
----
-
 ## 📖 Overview
 
 **KenyaJobs Backend API** is a production-ready Django REST Framework backend featuring comprehensive job management, secure user authentication, application tracking, and advanced filtering capabilities. The API is designed to serve the KenyaJobs platform with scalability, security, and reliability.
@@ -125,4 +103,4 @@
 | **Python Decouple** | Latest | Environment variable management |
 | **Render.com** | Cloud | Hosting platform |
 
-### Database Schema
+
